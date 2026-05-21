@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tradr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: #1f1f23;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #222;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #F4F4F4;
+    border-radius: 44px;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45), 0 0 0 10px #111 inset;
+    position: relative;
+    overflow: hidden;
+  }
+  .phone::before {
+    /* notch */
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 32px;
+    background: #111;
+    border-radius: 20px;
+    z-index: 200;
+  }
+
+  /* Inner safe area */
+  .app {
+    position: absolute;
+    inset: 0;
+    padding: 54px 0 24px;
+    display: flex;
+    flex-direction: column;
+    background: #F4F4F4;
+  }
+
+  /* Top bar */
+  .topbar {
+    height: 56px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #E6E6E6;
+    background: #fff;
+  }
+  .topbar .icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #B5B5B5;
+    cursor: pointer;
+  }
+  .topbar .icon svg { width: 24px; height: 24px; }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #FE3C72 0%, #FF655B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand .flame {
+    font-size: 22px;
+    line-height: 1;
+    -webkit-text-fill-color: initial;
+  }
+
+  /* Card stack */
+  .stack {
+    position: relative;
+    flex: 1;
+    margin: 14px 15px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stack-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-height: 560px;
+  }
+
+  .card {
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    will-change: transform, opacity;
+    cursor: grab;
+    touch-action: none;
+  }
+  .card.dragging { cursor: grabbing; transition: none; }
+  .card.animating { transition: transform 380ms cubic-bezier(.22,.61,.36,1), opacity 380ms ease; }
+  .card.snap-back { transition: transform 320ms cubic-bezier(.2,.9,.3,1.2); }
+
+  .card .hero {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-color: #2a2a2a;
+  }
+  .card .hero.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    text-align: center;
+    padding: 24px;
+    letter-spacing: -0.5px;
+  }
+  .card .gradient {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 100%);
+    pointer-events: none;
+  }
+  .card .meta {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 22px;
+    color: #fff;
+    z-index: 2;
+  }
+  .card .meta .name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .card .meta .name {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 1.05;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  .card .meta .age {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 26px;
+    opacity: 0.95;
+  }
+  .card .meta .location {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.95;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .card .meta .bio {
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 500;
+    opacity: 0.95;
+    margin-bottom: 12px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  }
+  .card .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.35);
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: #fff;
+  }
+  .info-btn {
+    position: absolute;
+    bottom: 18px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    color: #FE3C72;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', serif;
+    font-weight: 800;
+    font-style: italic;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 3;
+    border: none;
+  }
+
+  /* LIKE / NOPE stamps */
+  .stamp {
+    position: absolute;
+    top: 40px;
+    padding: 8px 18px;
+    border: 4px solid;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 38px;
+    letter-spacing: 2px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+    text-transform: uppercase;
+  }
+  .stamp.like {
+    left: 24px;
+    color: #42E695;
+    border-color: #42E695;
+    transform: rotate(-18deg);
+  }
+  .stamp.nope {
+    right: 24px;
+    color: #EC5E6F;
+    border-color: #EC5E6F;
+    transform: rotate(18deg);
+  }
+
+  /* Final card (Subcontract) */
+  .card.final {
+    background: #0A0A0A;
+    border: 1px solid #C9A961;
+    box-shadow: 0 8px 40px rgba(201,169,97,0.28), 0 0 0 0 rgba(201,169,97,0.4);
+    animation: pulseGlow 3.2s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 8px 40px rgba(201,169,97,0.20), 0 0 0 0 rgba(201,169,97,0.25); }
+    50%      { box-shadow: 0 8px 56px rgba(201,169,97,0.45), 0 0 0 6px rgba(201,169,97,0.10); }
+  }
+  .card.final .hero, .card.final .gradient, .card.final .meta, .card.final .info-btn { display: none; }
+  .card.final .final-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+  }
+  .card.final .final-eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #C9A961;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 28px;
+  }
+  .card.final .final-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 58px;
+    line-height: 0.95;
+    letter-spacing: -1.5px;
+    color: #C9A961;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .card.final .final-divider {
+    width: 60px;
+    height: 1px;
+    background: #C9A961;
+    opacity: 0.5;
+    margin-bottom: 22px;
+  }
+  .card.final .final-tagline {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 18px;
+    color: #E8D9B2;
+    line-height: 1.4;
+    max-width: 240px;
+  }
+
+  /* Action buttons */
+  .actions {
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 0 16px;
+  }
+  .action {
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
+  .action:active { transform: scale(0.92); }
+  .action svg { width: 50%; height: 50%; }
+  .action.sm { width: 44px; height: 44px; }
+  .action.lg { width: 64px; height: 64px; }
+  .action.rewind  { border-color: #F7B500; color: #F7B500; }
+  .action.nope    { border-color: #EC5E6F; color: #EC5E6F; }
+  .action.super   { border-color: #3BB2F6; color: #3BB2F6; }
+  .action.like    { border-color: #42E695; color: #42E695; }
+  .action.boost   { border-color: #A45EFF; color: #A45EFF; }
+
+  /* Match modal */
+  .match-modal, .wrong-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 32px;
+    text-align: center;
+    color: #fff;
+  }
+  .match-modal.show, .wrong-modal.show { display: flex; }
+  .match-modal {
+    background: linear-gradient(135deg, #FE3C72 0%, #FF655B 100%);
+  }
+  .match-modal .match-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 8px;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .match-modal .match-sub {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    opacity: 0.95;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .match-modal .match-photo {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255,255,255,0.2);
+    margin-bottom: 36px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  }
+  .modal-btn {
+    background: rgba(255,255,255,0.95);
+    color: #FE3C72;
+    border: none;
+    border-radius: 999px;
+    padding: 14px 36px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  }
+
+  .wrong-modal {
+    background: #EC5E6F;
+  }
+  .wrong-modal .wrong-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 52px;
+    line-height: 1;
+    margin-bottom: 36px;
+    letter-spacing: -1px;
+  }
+  .wrong-modal .modal-btn { color: #EC5E6F; }
+
+  /* End screen */
+  .end-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: #F4F4F4;
+    padding: 32px;
+    text-align: center;
+  }
+  .end-screen.show { display: flex; }
+  .end-screen .end-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #444;
+    margin-bottom: 8px;
+  }
+  .end-screen .end-sub {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 32px;
+  }
+  .end-screen .restart-btn {
+    background: linear-gradient(135deg, #FE3C72 0%, #FF655B 100%);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 14px 36px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 6px 16px rgba(254,60,114,0.35);
+  }
+
+  /* Full-screen final reveal */
+  #final-reveal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 400ms ease;
+    cursor: pointer;
+  }
+  #final-reveal.show {
+    display: flex;
+    opacity: 1;
+  }
+  #final-reveal img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+  #final-reveal .placeholder-text {
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    text-align: center;
+    display: none;
+  }
+  #final-reveal.fallback img { display: none; }
+  #final-reveal.fallback .placeholder-text { display: block; }
+  #final-reveal .continue-hint {
+    position: absolute;
+    bottom: 24px;
+    right: 28px;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="app">
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="icon" aria-label="Profile">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/></svg>
+      </div>
+      <div class="brand">
+        <span class="flame">🔥</span>
+        <span>tradr</span>
+      </div>
+      <div class="icon" aria-label="Chat">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+      </div>
+    </div>
+
+    <!-- Card stack -->
+    <div class="stack">
+      <div class="stack-inner" id="stack"></div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="actions">
+      <button class="action sm rewind" data-action="rewind" aria-label="Rewind">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 7"/></svg>
+      </button>
+      <button class="action lg nope" data-action="nope" aria-label="Nope">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button>
+      <button class="action sm super" data-action="super" aria-label="Super Like">
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 15.1,8.6 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.6"/></svg>
+      </button>
+      <button class="action lg like" data-action="like" aria-label="Like">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.35-9.5-9.04C.92 8.36 2.79 4.5 6.5 4.5c2 0 3.5 1.1 4.5 2.5 1-1.4 2.5-2.5 4.5-2.5 3.71 0 5.58 3.86 4 7.46C19 16.65 12 21 12 21z"/></svg>
+      </button>
+      <button class="action sm boost" data-action="boost" aria-label="Boost">
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="13,2 4,14 11,14 10,22 20,10 13,10"/></svg>
+      </button>
+    </div>
+
+    <!-- Match modal -->
+    <div class="match-modal" id="match-modal">
+      <div class="match-sub">It's a match!</div>
+      <div class="match-title">You both swiped right</div>
+      <div class="match-photo" id="match-photo"></div>
+      <button class="modal-btn" id="match-close">Keep Swiping</button>
+    </div>
+
+    <!-- Wrong-answer modal (left-swipe on Subcontract) -->
+    <div class="wrong-modal" id="wrong-modal">
+      <div class="wrong-title">Wrong answer.</div>
+      <button class="modal-btn" id="wrong-close">Try again</button>
+    </div>
+
+    <!-- End screen -->
+    <div class="end-screen" id="end-screen">
+      <div class="end-title">Out of profiles in your area</div>
+      <div class="end-sub">Check back later or expand your distance.</div>
+      <button class="restart-btn" id="restart-btn">Restart</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- FINAL REVEAL IMAGE                            -->
+<!-- Drop the reveal image at:                     -->
+<!--   images/subcontract-reveal.png               -->
+<!-- The <img> below will display it full-screen.  -->
+<!-- ============================================ -->
+<div id="final-reveal">
+  <img src="images/subcontract-reveal.png" alt="" onerror="this.onerror=null;this.src='images/subcontract-reveal.jpg';this.addEventListener('error',()=>{document.getElementById('final-reveal').classList.add('fallback');},{once:true});" />
+  <div class="placeholder-text">[ subcontract-reveal.png goes here ]</div>
+  <div class="continue-hint">Click anywhere to continue</div>
+</div>
+
+<script>
+// ============================================================
+// BUSINESSES — edit names, bios, cities, tags here.
+// Order is fixed for the video's narrative arc — do not shuffle.
+// ============================================================
+const BUSINESSES = [
+  {
+    id: 1,
+    name: "Cold Front HVAC",
+    age: 18,
+    city: "Phoenix, AZ",
+    hero: "images/hvac.png",
+    bio: "115° outside, 68° inside. You're welcome.",
+    tags: ["Licensed", "Insured", "24/7", "Family Owned"],
+    details: { services: ["AC install", "Furnace repair", "Duct cleaning"], rate: "$135/hr", rating: 4.8, reviews: 284 }
+  },
+  {
+    id: 2,
+    name: "Hank's Plumbing",
+    age: 23,
+    city: "Charlotte, NC",
+    hero: "images/plumbing.png",
+    bio: "I'll fix your pipes — your marriage might survive the bill.",
+    tags: ["Licensed", "Insured", "24/7", "Family Owned"],
+    details: { services: ["Drain cleaning", "Water heaters", "Repiping"], rate: "$125/hr", rating: 4.8, reviews: 312 }
+  },
+  {
+    id: 3,
+    name: "Daugherty Electric",
+    age: 27,
+    city: "Indianapolis, IN",
+    hero: "images/electrical.png",
+    bio: "Two decades up ladders. Still got all ten fingers.",
+    tags: ["Master Electrician", "Bonded", "Residential", "Commercial"],
+    details: { services: ["Panel upgrades", "Rewires", "EV chargers"], rate: "$145/hr", rating: 4.9, reviews: 401 }
+  },
+  {
+    id: 4,
+    name: "Greenline Landscaping",
+    age: 12,
+    city: "Tampa, FL",
+    hero: "images/landscaping.png",
+    bio: "Your HOA's favorite enemy. Your lawn's new best friend.",
+    tags: ["Licensed", "Insured", "Weekly Service", "Family Owned"],
+    details: { services: ["Lawn care", "Hardscaping", "Tree work"], rate: "$85/hr", rating: 4.7, reviews: 198 }
+  },
+  {
+    id: 5,
+    name: "Rojas Pressure Pros",
+    age: 9,
+    city: "Tulsa, OK",
+    hero: "images/pressure-washing.png",
+    bio: "10 years of grime, gone in 20 minutes. Bring the camera.",
+    tags: ["Insured", "Eco-Safe", "Same Day", "Veteran Owned"],
+    details: { services: ["Driveways", "Decks", "Soft wash"], rate: "$0.18/sqft", rating: 4.9, reviews: 247 }
+  },
+  {
+    id: 6,
+    name: "Big Mike's Concrete",
+    age: 31,
+    city: "Nashville, TN",
+    hero: null, // no image — falls back to placeholder
+    bio: "If it ain't poured by Mike, it ain't gonna last.",
+    tags: ["Licensed", "Bonded", "Driveways", "Foundations"],
+    details: { services: ["Driveways", "Slabs", "Foundations"], rate: "$8/sqft", rating: 4.8, reviews: 156 }
+  },
+  {
+    id: 7,
+    name: "Sutter & Sons GC",
+    age: 20,
+    city: "Boise, ID",
+    hero: "images/general-contracting.png",
+    bio: "Twenty years in the trades, ten running my own crews. I do both.",
+    tags: ["Licensed GC", "Bonded", "Multi-Trade", "Crew of 12"],
+    details: { services: ["Remodels", "Additions", "Ground-up builds"], rate: "$95/hr", rating: 4.9, reviews: 178 }
+  },
+  {
+    id: 999,
+    name: "Subcontract",
+    age: null,
+    city: null,
+    hero: null,
+    bio: null,
+    tags: [],
+    isFinal: true
+  }
+];
+
+// Brand colors per trade for placeholder fallbacks
+const PLACEHOLDER_COLORS = {
+  1: "#2B6CB0", 2: "#1A4D8F", 3: "#D69E2E",
+  4: "#2F855A", 5: "#0987A0", 6: "#4A5568", 7: "#744210"
+};
+
+const stackEl = document.getElementById('stack');
+const matchModal = document.getElementById('match-modal');
+const matchPhoto = document.getElementById('match-photo');
+const matchClose = document.getElementById('match-close');
+const wrongModal = document.getElementById('wrong-modal');
+const wrongClose = document.getElementById('wrong-close');
+const endScreen = document.getElementById('end-screen');
+const restartBtn = document.getElementById('restart-btn');
+const finalReveal = document.getElementById('final-reveal');
+
+let state = {
+  deck: [],
+  likes: [],
+  nopes: [],
+  ended: false
+};
+
+function init() {
+  state = { deck: BUSINESSES.slice(), likes: [], nopes: [], ended: false };
+  stackEl.innerHTML = '';
+  endScreen.classList.remove('show');
+  matchModal.classList.remove('show');
+  wrongModal.classList.remove('show');
+  finalReveal.classList.remove('show');
+  render();
+}
+
+function render() {
+  stackEl.innerHTML = '';
+  if (state.deck.length === 0) {
+    endScreen.classList.add('show');
+    return;
+  }
+  // Render up to 3 cards stacked
+  const toRender = state.deck.slice(0, 3);
+  toRender.forEach((biz, i) => {
+    const card = buildCard(biz, i);
+    stackEl.appendChild(card);
+  });
+  // Attach drag handlers to top card
+  const top = stackEl.querySelector('.card');
+  if (top) attachDrag(top);
+}
+
+function buildCard(biz, stackIndex) {
+  const card = document.createElement('div');
+  card.className = 'card' + (biz.isFinal ? ' final' : '');
+  card.dataset.id = biz.id;
+
+  // Stack styling — top card is full, behind cards shrink/translate
+  const scale = 1 - stackIndex * 0.045;
+  const translateY = stackIndex * 10;
+  card.style.transform = `translateY(${translateY}px) scale(${scale})`;
+  card.style.zIndex = 100 - stackIndex;
+  card.style.opacity = stackIndex >= 3 ? 0 : 1;
+
+  if (biz.isFinal) {
+    card.innerHTML = `
+      <div class="final-inner">
+        <div class="final-eyebrow">★ The Holy Grail ★</div>
+        <div class="final-title">Subcontract</div>
+        <div class="final-divider"></div>
+        <div class="final-tagline">The smart money move.</div>
+      </div>
+      <div class="stamp like">LIKE</div>
+      <div class="stamp nope">NOPE</div>
+    `;
+    return card;
+  }
+
+  const heroHtml = biz.hero
+    ? `<div class="hero" style="background-image:url('${biz.hero}')"></div>`
+    : `<div class="hero placeholder" style="background:${PLACEHOLDER_COLORS[biz.id] || '#444'}">${escapeHtml(biz.name)}</div>`;
+
+  const tagsHtml = biz.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('');
+
+  card.innerHTML = `
+    ${heroHtml}
+    <div class="gradient"></div>
+    <button class="info-btn" aria-label="More info">i</button>
+    <div class="meta">
+      <div class="name-row">
+        <span class="name">${escapeHtml(biz.name)}</span>
+        ${biz.age != null ? `<span class="age">${biz.age}</span>` : ''}
+      </div>
+      ${biz.city ? `<div class="location">📍 ${escapeHtml(biz.city)}</div>` : ''}
+      ${biz.bio ? `<div class="bio">${escapeHtml(biz.bio)}</div>` : ''}
+      <div class="tags">${tagsHtml}</div>
+    </div>
+    <div class="stamp like">LIKE</div>
+    <div class="stamp nope">NOPE</div>
+  `;
+  return card;
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============================================================
+// Drag mechanics
+// ============================================================
+function attachDrag(card) {
+  let startX = 0, startY = 0, currentX = 0, currentY = 0;
+  let dragging = false;
+  let pointerId = null;
+
+  const onDown = (e) => {
+    // Ignore drags that start on a button (info, etc.)
+    if (e.target.closest('.info-btn')) return;
+    dragging = true;
+    pointerId = e.pointerId;
+    card.setPointerCapture(pointerId);
+    startX = e.clientX;
+    startY = e.clientY;
+    card.classList.add('dragging');
+    card.classList.remove('animating', 'snap-back');
+  };
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    currentX = e.clientX - startX;
+    currentY = e.clientY - startY;
+    updateCardTransform(card, currentX, currentY);
+  };
+
+  const onUp = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    if (pointerId != null) {
+      try { card.releasePointerCapture(pointerId); } catch(_) {}
+    }
+    card.classList.remove('dragging');
+
+    const cardWidth = card.offsetWidth;
+    const threshold = cardWidth * 0.30;
+
+    if (currentX > threshold) {
+      flyOff(card, 'right');
+    } else if (currentX < -threshold) {
+      flyOff(card, 'left');
+    } else {
+      // Snap back
+      card.classList.add('snap-back');
+      card.style.transform = 'translate(0,0) rotate(0)';
+      setStampOpacity(card, 0, 0);
+      setTimeout(() => card.classList.remove('snap-back'), 320);
+    }
+    currentX = 0; currentY = 0;
+  };
+
+  card.addEventListener('pointerdown', onDown);
+  card.addEventListener('pointermove', onMove);
+  card.addEventListener('pointerup', onUp);
+  card.addEventListener('pointercancel', onUp);
+}
+
+function updateCardTransform(card, dx, dy) {
+  const rotation = Math.max(-15, Math.min(15, dx / 18));
+  card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg)`;
+  const cardWidth = card.offsetWidth;
+  const opacityLike = Math.min(1, Math.max(0, dx / (cardWidth * 0.4)));
+  const opacityNope = Math.min(1, Math.max(0, -dx / (cardWidth * 0.4)));
+  setStampOpacity(card, opacityLike, opacityNope);
+}
+
+function setStampOpacity(card, likeOp, nopeOp) {
+  const like = card.querySelector('.stamp.like');
+  const nope = card.querySelector('.stamp.nope');
+  if (like) like.style.opacity = likeOp;
+  if (nope) nope.style.opacity = nopeOp;
+}
+
+function flyOff(card, dir) {
+  card.classList.add('animating');
+  const x = dir === 'right' ? window.innerWidth : -window.innerWidth;
+  const rot = dir === 'right' ? 25 : -25;
+  card.style.transform = `translate(${x}px, 60px) rotate(${rot}deg)`;
+  card.style.opacity = 0;
+  setStampOpacity(card, dir === 'right' ? 1 : 0, dir === 'left' ? 1 : 0);
+
+  const biz = state.deck[0];
+  if (dir === 'right') {
+    state.likes.push(biz.id);
+  } else {
+    state.nopes.push(biz.id);
+  }
+
+  setTimeout(() => {
+    handleSwipeComplete(biz, dir);
+  }, 380);
+}
+
+function handleSwipeComplete(biz, dir) {
+  if (biz.isFinal) {
+    if (dir === 'right') {
+      // The climax — show the full-screen reveal
+      showFinalReveal();
+      return;
+    } else {
+      // Wrong answer — show modal, keep Subcontract on top
+      wrongModal.classList.add('show');
+      return;
+    }
+  }
+
+  // Normal card: remove from deck, advance
+  state.deck.shift();
+
+  if (dir === 'right') {
+    showMatch(biz);
+  }
+  render();
+}
+
+function showMatch(biz) {
+  if (biz.hero) {
+    matchPhoto.style.backgroundImage = `url('${biz.hero}')`;
+  } else {
+    matchPhoto.style.backgroundImage = 'none';
+    matchPhoto.style.background = PLACEHOLDER_COLORS[biz.id] || '#444';
+  }
+  matchModal.classList.add('show');
+}
+
+function showFinalReveal() {
+  finalReveal.classList.add('show');
+}
+
+// ============================================================
+// Programmatic swipe (button triggers)
+// ============================================================
+function triggerSwipe(dir) {
+  const top = stackEl.querySelector('.card');
+  if (!top) return;
+  flyOff(top, dir);
+}
+
+document.querySelectorAll('.action').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const action = btn.dataset.action;
+    if (action === 'like') triggerSwipe('right');
+    else if (action === 'nope') triggerSwipe('left');
+    // rewind / super / boost: tactile only, no logic
+  });
+});
+
+// Modal closers
+matchClose.addEventListener('click', () => matchModal.classList.remove('show'));
+
+wrongClose.addEventListener('click', () => {
+  wrongModal.classList.remove('show');
+  // Re-render so the Subcontract card snaps back to the top
+  render();
+});
+
+restartBtn.addEventListener('click', init);
+
+// Final reveal dismiss → end screen
+finalReveal.addEventListener('click', () => {
+  finalReveal.classList.remove('show');
+  state.deck = [];
+  endScreen.classList.add('show');
+});
+
+// Boot
+init();
+</script>
+</body>
+</html>
