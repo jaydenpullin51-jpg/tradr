@@ -267,63 +267,66 @@
     transform: rotate(18deg);
   }
 
-  /* Final card (Subcontract) */
+  /* Final card (Subcontract) — image hero w/ gold accents */
   .card.final {
     background: #0A0A0A;
-    border: 1px solid #C9A961;
+    border: 1.5px solid #C9A961;
     box-shadow: 0 8px 40px rgba(201,169,97,0.28), 0 0 0 0 rgba(201,169,97,0.4);
     animation: pulseGlow 3.2s ease-in-out infinite;
   }
   @keyframes pulseGlow {
     0%, 100% { box-shadow: 0 8px 40px rgba(201,169,97,0.20), 0 0 0 0 rgba(201,169,97,0.25); }
-    50%      { box-shadow: 0 8px 56px rgba(201,169,97,0.45), 0 0 0 6px rgba(201,169,97,0.10); }
+    50%      { box-shadow: 0 8px 56px rgba(201,169,97,0.55), 0 0 0 6px rgba(201,169,97,0.12); }
   }
-  .card.final .hero, .card.final .gradient, .card.final .meta, .card.final .info-btn { display: none; }
+  .card.final .info-btn { display: none; }
+  .card.final .gradient {
+    height: 65%;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.92) 100%);
+  }
   .card.final .final-inner {
     position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 32px;
+    left: 20px;
+    right: 20px;
+    bottom: 26px;
+    z-index: 2;
+    text-align: left;
   }
   .card.final .final-eyebrow {
     font-family: 'Inter', sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     color: #C9A961;
     letter-spacing: 4px;
     text-transform: uppercase;
-    opacity: 0.75;
-    margin-bottom: 28px;
+    opacity: 0.9;
+    margin-bottom: 10px;
   }
   .card.final .final-title {
     font-family: 'Poppins', sans-serif;
     font-weight: 800;
-    font-size: 58px;
+    font-size: 46px;
     line-height: 0.95;
-    letter-spacing: -1.5px;
+    letter-spacing: -1px;
     color: #C9A961;
     text-transform: uppercase;
-    margin-bottom: 22px;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.6);
   }
   .card.final .final-divider {
-    width: 60px;
+    width: 48px;
     height: 1px;
     background: #C9A961;
-    opacity: 0.5;
-    margin-bottom: 22px;
+    opacity: 0.6;
+    margin-bottom: 12px;
   }
   .card.final .final-tagline {
     font-family: 'Playfair Display', serif;
     font-style: italic;
     font-weight: 500;
-    font-size: 18px;
+    font-size: 17px;
     color: #E8D9B2;
     line-height: 1.4;
-    max-width: 240px;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.6);
   }
 
   /* Action buttons */
@@ -746,6 +749,8 @@ function buildCard(biz, stackIndex) {
 
   if (biz.isFinal) {
     card.innerHTML = `
+      <div class="hero" style="background-image:url('images/subcontract-reveal.png')"></div>
+      <div class="gradient"></div>
       <div class="final-inner">
         <div class="final-eyebrow">★ The Holy Grail ★</div>
         <div class="final-title">Subcontract</div>
